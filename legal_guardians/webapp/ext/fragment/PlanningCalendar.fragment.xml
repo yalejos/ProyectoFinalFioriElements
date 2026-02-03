@@ -1,0 +1,53 @@
+<core:FragmentDefinition
+                        xmlns="sap.m"
+						xmlns:unified="sap.ui.unified"
+						xmlns:core="sap.ui.core"  
+						xmlns:macros="sap.fe.macros">
+	<VBox core:require="{ handler: 'com/ya/legalguardians/ext/fragment/PlanningCalendar'}"
+	       id="vbox">
+		<SinglePlanningCalendar id="calendar"
+		                        appointments="{toAppointments}"
+								appointmentSelect=".extension.com.ya.legalguardians.ext.controller.ObjectPage.onAppointmentSelect"
+								enableAppointmentsDragAndDrop="{= ${IsActiveEntity} === true ? false : true }" 
+								appointmentDrop=".extension.com.ya.legalguardians.ext.controller.ObjectPage.onAppointmentDrop">
+			<views>
+				<SinglePlanningCalendarDayView id="day" key="day" title="{i18n>day}" />
+				<SinglePlanningCalendarWeekView id="week" key="week" title="{i18n>week}" />
+				<SinglePlanningCalendarMonthView id="month" key="month" title="{i18n>month}" />								
+			</views>
+			
+			<actions>
+				<Button id="create"
+				        text="{i18n>scheduleAppointment}"
+						tooltip= "{i18n>scheduleAppointmentTooltip}"
+						type="Emphasized"
+						visible="{=${IsActiveEntity} === true? false : true }"
+				        press=".extension.com.ya.legalguardians.ext.controller.ObjectPage.onOpenForm"/>
+			    <Button id="confirmBtn"
+           				text="{i18n>confirmAppointment}"
+           			    type="Accept"
+						visible="{=${IsActiveEntity} === true? false : true }"
+           			    enabled="false"
+                        press=".extension.com.ya.legalguardians.ext.controller.ObjectPage.onConfirmAppointment"/>
+
+   				<Button id="cancelBtn"
+            			text="{i18n>cancelAppointment}"
+            			type="Reject"
+						visible="{=${IsActiveEntity} === true? false : true }"
+            			enabled="false"
+            			press=".extension.com.ya.legalguardians.ext.controller.ObjectPage.onCancelAppointment"/>
+			</actions>
+			
+			<appointments>
+				<unified:CalendarAppointment id="appointment"
+				                             key="{block_ID}" 
+				                             title="{title}"
+											 description="{description}"
+				                             startDate="{startDate}" 
+											 endDate="{endDate2}"
+											 type="Type01" />
+			</appointments>
+		
+		</SinglePlanningCalendar>
+	</VBox>
+</core:FragmentDefinition>

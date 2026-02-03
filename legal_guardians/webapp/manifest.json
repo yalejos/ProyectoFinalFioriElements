@@ -1,0 +1,225 @@
+{
+  "_version": "1.60.0",
+  "sap.app": {
+    "id": "com.ya.legalguardians",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": {
+      "version": "0.0.1"
+    },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "resources": "resources.json",
+    "sourceTemplate": {
+      "id": "@sap/generator-fiori:lrop",
+      "version": "1.20.1",
+      "toolsId": "b4ea05e7-696a-48ff-8495-475966462db4"
+    },
+    "dataSources": {
+      "annotation": {
+        "type": "ODataAnnotation",
+        "uri": "annotations/annotation.xml",
+        "settings": {
+          "localUri": "annotations/annotation.xml"
+        }
+      },
+      "mainService": {
+        "uri": "/odata/v4/logali-group/",
+        "type": "OData",
+        "settings": {
+          "annotations": [
+            "annotation"
+          ],
+          "localUri": "localService/mainService/metadata.xml",
+          "odataVersion": "4.0"
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {
+      "icon": "",
+      "favIcon": "",
+      "phone": "",
+      "phone@2": "",
+      "tablet": "",
+      "tablet@2": ""
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.fe.templates": {}
+      }
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "com.ya.legalguardians.i18n.i18n"
+        }
+      },
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      },
+      "@i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "uri": "i18n/i18n.properties"
+      }
+    },
+    "resources": {
+      "css": []
+    },
+    "routing": {
+      "config": {},
+      "routes": [
+        {
+          "pattern": ":?query:",
+          "name": "LegalGuardiansSetList",
+          "target": "LegalGuardiansSetList"
+        },
+        {
+          "pattern": "LegalGuardiansSet({key}):?query:",
+          "name": "LegalGuardiansSetObjectPage",
+          "target": "LegalGuardiansSetObjectPage"
+        },
+        {
+          "pattern": "LegalGuardiansSet({key})/toPatients({key2}):?query:",
+          "name": "PatientsSetObjectPage",
+          "target": "PatientsSetObjectPage"
+        },
+        {
+          "name": "LegalGuardiansSet_toPatients_toAppointmentsObjectPage",
+          "pattern": "LegalGuardiansSet({key})/toPatients({key2})/toAppointments(ID={key3},IsActiveEntity={boolean}):?query:",
+          "target": "LegalGuardiansSet_toPatients_toAppointmentsObjectPage"
+        }
+      ],
+      "targets": {
+        "LegalGuardiansSetList": {
+          "type": "Component",
+          "id": "LegalGuardiansSetList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "contextPath": "/LegalGuardiansSet",
+              "variantManagement": "Page",
+              "navigation": {
+                "LegalGuardiansSet": {
+                  "detail": {
+                    "route": "LegalGuardiansSetObjectPage"
+                  }
+                }
+              },
+              "controlConfiguration": {
+                "@com.sap.vocabularies.UI.v1.LineItem": {
+                  "tableSettings": {
+                    "type": "ResponsiveTable"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "LegalGuardiansSetObjectPage": {
+          "type": "Component",
+          "id": "LegalGuardiansSetObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "editableHeaderContent": false,
+              "contextPath": "/LegalGuardiansSet",
+              "navigation": {
+                "toPatients": {
+                  "detail": {
+                    "route": "PatientsSetObjectPage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "PatientsSetObjectPage": {
+          "type": "Component",
+          "id": "PatientsSetObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "editableHeaderContent": false,
+              "contextPath": "/LegalGuardiansSet/toPatients",
+              "content": {
+                "body": {
+                  "sections": {
+                    "PlanningCalendar": {
+                      "template": "com.ya.legalguardians.ext.fragment.PlanningCalendar",
+                      "position": {
+                        "placement": "After",
+                        "anchor": "toAppointments::LineItem::Patients"
+                      },
+                      "title": "Planning Calendar"
+                    }
+                  }
+                }
+              },
+              "navigation": {
+                "toAppointments": {
+                  "detail": {
+                    "route": "LegalGuardiansSet_toPatients_toAppointmentsObjectPage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "LegalGuardiansSet_toPatients_toAppointmentsObjectPage": {
+          "type": "Component",
+          "id": "LegalGuardiansSet_toPatients_toAppointmentsObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "navigation": {},
+              "contextPath": "/LegalGuardiansSet/toPatients/toAppointments"
+            }
+          }
+        }
+      }
+    },
+    "extends": {
+      "extensions": {
+        "sap.ui.controllerExtensions": {
+          "sap.fe.templates.ObjectPage.ObjectPageController": {
+            "controllerName": "com.ya.legalguardians.ext.controller.ObjectPage"
+          }
+        }
+      }
+    }
+  },
+  "sap.fiori": {
+    "registrationIds": [],
+    "archeType": "transactional"
+  },
+  "sap.fe": {
+    "app": {
+      "enableLazyLoading": true
+    }
+  }
+}

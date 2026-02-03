@@ -1,0 +1,9 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    <SelectDialog id="_IDGenSelectDialog4"
+        confirm=".onValueHelpConfirm"
+        search=".onValueHelpSearch"
+        cancel=".onValueHelpClose"> 
+    </SelectDialog>
+</core:FragmentDefinition>
