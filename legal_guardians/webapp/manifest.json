@@ -107,11 +107,6 @@
           "pattern": "LegalGuardiansSet({key})/toPatients({key2}):?query:",
           "name": "PatientsSetObjectPage",
           "target": "PatientsSetObjectPage"
-        },
-        {
-          "name": "LegalGuardiansSet_toPatients_toAppointmentsObjectPage",
-          "pattern": "LegalGuardiansSet({key})/toPatients({key2})/toAppointments(ID={key3},IsActiveEntity={boolean}):?query:",
-          "target": "LegalGuardiansSet_toPatients_toAppointmentsObjectPage"
         }
       ],
       "targets": {
@@ -176,28 +171,19 @@
                         "anchor": "toAppointments::LineItem::Patients"
                       },
                       "title": "Planning Calendar"
+                    },
+                    "VizFrame": {
+                      "template": "com.ya.legalguardians.ext.fragment.VizFrame",
+                      "position": {
+                        "placement": "After",
+                        "anchor": "PlanningCalendar"
+                      },
+                      "title": "Appointments review"
                     }
                   }
                 }
               },
-              "navigation": {
-                "toAppointments": {
-                  "detail": {
-                    "route": "LegalGuardiansSet_toPatients_toAppointmentsObjectPage"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "LegalGuardiansSet_toPatients_toAppointmentsObjectPage": {
-          "type": "Component",
-          "id": "LegalGuardiansSet_toPatients_toAppointmentsObjectPage",
-          "name": "sap.fe.templates.ObjectPage",
-          "options": {
-            "settings": {
-              "navigation": {},
-              "contextPath": "/LegalGuardiansSet/toPatients/toAppointments"
+              "navigation": {}
             }
           }
         }

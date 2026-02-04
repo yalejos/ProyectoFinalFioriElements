@@ -40,6 +40,7 @@
                         <Record Type="UI.ReferenceFacet">
                             <PropertyValue Property="Target" AnnotationPath="toAppointments/@UI.LineItem#Patients"/>
                             <PropertyValue Property="Label" String="Schedule Appointments"/>
+                            <Annotation Term="UI.Hidden"/>
                         </Record>
                     </Collection>
                 </Annotation>

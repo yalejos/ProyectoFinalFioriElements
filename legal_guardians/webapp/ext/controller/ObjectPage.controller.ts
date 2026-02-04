@@ -21,11 +21,14 @@ import Context from 'sap/ui/model/odata/v4/Context';
 import CalendarAppointment from 'sap/ui/unified/CalendarAppointment';
 import DateFormat from 'sap/ui/core/format/DateFormat';
 import DateTime from 'sap/ui/model/odata/type/DateTime';
+import ODataModel from 'sap/ui/model/odata/v4/ODataModel';
+import VizFrame from 'sap/viz/ui5/controls/VizFrame';
 
 /**
  * @namespace com.ya.legalguardians.ext.controller
  * @controller
  */
+
 export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 	_pDialog: Dialog;
 	private _pValueHelpDialog: Promise<SelectDialog>;
@@ -42,6 +45,87 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 			// you can access the Fiori elements extensionAPI via this.base.getExtensionAPI
 			const model = this.base.getExtensionAPI().getModel();
 			this.formModel();
+
+			const OExtensionAPI = this.base as any;
+			const oView = OExtensionAPI.getView() as View;
+			oView.bindElement({
+				path: "", 
+				events: {
+					change: () => this._loadChartData()
+				}
+			});
+		}
+	}
+
+	private async _loadChartData(): Promise<void> {
+		const OExtensionAPI = this.base as any;
+		const oView = OExtensionAPI.getView();
+		const oContext = oView.getBindingContext() as any;
+
+		if (!oContext) {
+			return;
+		}
+		try {
+
+			const oListBinding = oView.getModel().bindList("toAppointments", oContext, undefined, undefined, {
+				$select: "status_code"
+			});
+
+			const aContexts = await oListBinding.requestContexts();
+			const aAppointments = aContexts.map((oCtx: any) => oCtx.getObject());
+
+			if (aAppointments.length > 0) {
+				const counts = { Confirmadas: 0, EnEspera: 0, Pendientes: 0 };
+
+				aAppointments.forEach((appt: any) => {
+					switch (appt.status_code) {
+						case "Confirmed": counts.Confirmadas++; break;
+						case "OnHold": counts.EnEspera++; break;
+						case "Pending": counts.Pendientes++; break;
+					}
+				});
+
+				const aChartData = [
+					{ status: "Confirmadas", count: counts.Confirmadas, color: "#2b7d2b" }, // Verde
+					{ status: "En espera", count: counts.EnEspera, color: "#e78c07" },    // Naranja
+					{ status: "Pendientes", count: counts.Pendientes, color: "#5cbae6" }   // Azul
+				].filter(item => item.count > 0);
+
+				oView.setModel(new JSONModel({ chartData: aChartData }), "chartModel");
+
+				this._configureVizColors(aChartData);
+			}
+		} catch (oError: any) {
+			console.error("Error: La relación toAppointments no existe en la entidad Patients", oError);
+		}
+
+	}
+
+	private _configureVizColors(aChartData: any[]): void {
+		const oView = (this.base as any).getView();
+		const oVizFrame = oView.byId("fe::CustomSubSection::VizFrame--appointmentVizFrame");
+		const oResourceBundle = oView.getModel("i18n").getResourceBundle() as any;
+		const sTitle = oResourceBundle.getText("charttitle") as string;
+
+		if (oVizFrame) {
+			const aColors = aChartData.map(item => item.color);
+			oVizFrame.setVizProperties({
+				plotArea: {
+					colorPalette: aColors,
+					dataLabel: {
+						visible: true,
+						showTotal: true
+					}
+				},
+				title: {
+					visible: true,
+					text: sTitle
+				},
+
+				legend: {
+					visible: true
+				}
+			});
 		}
 	}
 
@@ -61,13 +145,12 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 		};
 
 		const model = new JSONModel(data);
-		//@ts-ignore
-		(this.base.getView() as View).setModel(model, "formModel");
+		((this.base as any).getView() as View).setModel(model, "formModel");
 	}
 
 	public async onOpenForm(): Promise<void> {
-		//@ts-ignore
-		const oView = (this.base.getView() as View);
+		const OExtensionAPI = this.base as any;
+		const oView = OExtensionAPI.getView() as View;
 
 		this._pDialog ??= await Fragment.load({
 			id: oView.getId(),
@@ -96,8 +179,6 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 		const sDescription = body.description as string;
 		const sBeginDate = body.beginDate as String;
 		const oEditFlow = this.base.getExtensionAPI().getEditFlow();
-		console.log(sTherapistID);
-		console.log(body);
 
 		if (oContext) {
 			try {
@@ -202,8 +283,7 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 			});
 		} else if (this._sInputId.includes("inputBlock")) {
 			sEntityPath = "/VH_Blocks";
-			//@ts-ignore
-			sTitle = this.base.getModel("i18n").getResourceBundle().getText("selectBlock");
+			sTitle = (this.base as any).getModel("i18n").getResourceBundle().getText("selectBlock");
 			sCurrentID = oFormModel.getProperty("/block_ID");
 
 			oDialog.bindAggregation("items", {
@@ -232,7 +312,6 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 
 	public onValueHelpSearch(oEvent: any): void {
 		const sValue = oEvent.getParameter("value");
-		// Filtramos por el campo "Name" de la entidad
 		const oFilter = new Filter("Name", FilterOperator.Contains, sValue);
 		const oBinding = oEvent.getSource().getBinding("items");
 		oBinding.filter([oFilter]);
@@ -240,10 +319,11 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 
 	public onValueHelpConfirm(oEvent: any): void {
 		const oSelectedItem = oEvent.getParameter("selectedItem");
+
 		if (!oSelectedItem) return;
 
 		let sSelectedValue: any;
-        const OExtensionAPI = this.base as any;
+		const OExtensionAPI = this.base as any;
 		const oView = OExtensionAPI.getView() as View;
 		const oInput = oView.byId(this._sInputId) as Input;
 		const oFormModel = oView.getModel("formModel") as JSONModel;
@@ -343,7 +423,7 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 
 		const oAppointment = oEvent.getParameter("appointment") as CalendarAppointment;
 		const oContext = oAppointment?.getBindingContext() as Context;
-		
+
 		const oNewStart = oEvent.getParameter("startDate") as Date;
 		const oNewEnd = oEvent.getParameter("endDate") as Date;
 		const sStart = oNewStart.toISOString().split('.')[0] + "Z";
@@ -407,13 +487,15 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 		const sActionPath = `/AppointmentsSet(ID=${sID},IsActiveEntity=true)`;
 		const oAppointmentContext = oModel.bindContext(sActionPath) as any;
 		const oEditFlow = this.base.getExtensionAPI().getEditFlow();
+		const oData = await oAppointmentContext.requestObject("");
+		console.log(oData);
 
 		try {
 			await oAppointmentContext.requestObject("");
 			if (oAppointmentContext) {
 
 				await oEditFlow.invokeAction(`LogaliGroup.${sActionName}`, {
-				//await oEditFlow.invokeAction("LogaliGroup.cancelAppointment", {
+					//await oEditFlow.invokeAction("LogaliGroup.cancelAppointment", {
 					contexts: oAppointmentContext,
 					skipParameterDialog: true,
 					parameterValues: []
