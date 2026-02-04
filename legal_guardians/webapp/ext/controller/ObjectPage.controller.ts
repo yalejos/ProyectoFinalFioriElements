@@ -12,13 +12,11 @@ import Filter from 'sap/ui/model/Filter';
 import FilterOperator from 'sap/ui/model/FilterOperator';
 import { DateRangePicker$ChangeEvent } from 'sap/ui/webc/main/DateRangePicker';
 import SinglePlanningCalendar, { SinglePlanningCalendar$AppointmentDropEvent, SinglePlanningCalendar$AppointmentSelectEvent } from "sap/m/SinglePlanningCalendar";
-import ODataListBinding from "sap/ui/model/odata/v4/ODataListBinding";
 import Guid from 'sap/ui/model/odata/type/Guid';
 import ODataMetaModel from 'sap/ui/model/odata/v4/ODataMetaModel';
 import Context from 'sap/ui/model/odata/v4/Context';
 import CalendarAppointment from 'sap/ui/unified/CalendarAppointment';
-import ODataModel from 'sap/ui/model/odata/v4/ODataModel';
-import VizFrame from 'sap/viz/ui5/controls/VizFrame';
+
 
 /**
  * @namespace com.ya.legalguardians.ext.controller
