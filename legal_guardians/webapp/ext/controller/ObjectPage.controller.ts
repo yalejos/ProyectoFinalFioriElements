@@ -15,12 +15,8 @@ import SinglePlanningCalendar, { SinglePlanningCalendar$AppointmentDropEvent, Si
 import ODataListBinding from "sap/ui/model/odata/v4/ODataListBinding";
 import Guid from 'sap/ui/model/odata/type/Guid';
 import ODataMetaModel from 'sap/ui/model/odata/v4/ODataMetaModel';
-import DragInfo from "sap/ui/core/dnd/DragInfo";
-import DropInfo from "sap/ui/core/dnd/DropInfo";
 import Context from 'sap/ui/model/odata/v4/Context';
 import CalendarAppointment from 'sap/ui/unified/CalendarAppointment';
-import DateFormat from 'sap/ui/core/format/DateFormat';
-import DateTime from 'sap/ui/model/odata/type/DateTime';
 import ODataModel from 'sap/ui/model/odata/v4/ODataModel';
 import VizFrame from 'sap/viz/ui5/controls/VizFrame';
 
