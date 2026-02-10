@@ -43,7 +43,7 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 			const OExtensionAPI = this.base as any;
 			const oView = OExtensionAPI.getView() as View;
 			oView.bindElement({
-				path: "", 
+				path: "",
 				events: {
 					change: () => this._loadChartData()
 				}
@@ -55,14 +55,18 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 		const OExtensionAPI = this.base as any;
 		const oView = OExtensionAPI.getView();
 		const oContext = oView.getBindingContext() as any;
+		const sCanonical = await oContext.requestCanonicalPath();
+		const sActivePath = sCanonical.replace("IsActiveEntity=false", "IsActiveEntity=true");
+		const oActiveContext = oView.getModel().bindContext(sActivePath).getBoundContext();
 
 		if (!oContext) {
 			return;
 		}
 		try {
 
-			const oListBinding = oView.getModel().bindList("toAppointments", oContext, undefined, undefined, {
+			const oListBinding = oView.getModel().bindList("toAppointments", oActiveContext, undefined, undefined, {
 				$select: "status_code"
+
 			});
 
 			const aContexts = await oListBinding.requestContexts();
