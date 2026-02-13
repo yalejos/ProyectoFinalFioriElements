@@ -1,7 +1,8 @@
 # ProyectoFinalFioriElements
 SAP BTP - SAPUI5 / Flexible Programming model / Fiori Elements Project
 Este repositorio contiene el código fuente de la aplicación Legal Guardians, desarrollada sobre SAP Business Technology Platform (BTP). 
-El proyecto implementa una arquitectura de extensiones, integrando servicios OData V4 con manejo de Draft (IsActiveEntity) y lógica de navegación  hacia pacientes y citas.
+El proyecto implementa una arquitectura de extensiones, integrando servicios OData V4 con manejo de Draft (IsActiveEntity) y lógica de navegación 
+hacia pacientes y citas.
 
 Instalación y Configuración
 Siga estos pasos para ejecutar el proyecto en su entorno local o en Business Application Studio:
@@ -15,4 +16,5 @@ Siga estos pasos para ejecutar el proyecto en su entorno local o en Business App
     Service Path: /odata/v4/logali-group/
     Entity Set: LegalGuardiansSet
 
-   Contacto: Yenifer Alejos Ingeniero en Informática | Arquitecto Líder SAP
+   Contacto: Yenifer Alejos Ingeniero en Informática | Arquitecto Líder SAP. LinkedIn: http://www.linkedin.com/in/yenifer-alejos-81498337
+   
