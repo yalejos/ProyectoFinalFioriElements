@@ -8,3 +8,7 @@ mta-*
 resources
 archive.zip
 .*_mta_build_tmp
+
+# NO ignorar imágenes en la carpeta img
+!img/*.png
+!img/*.jpg
