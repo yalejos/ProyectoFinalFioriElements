@@ -478,51 +478,46 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 
 		const OExtensionAPI = this.base as any;
 		const oView = OExtensionAPI.getView() as View;
-		const oModel = oView.getModel() as ODataMetaModel;
-		const oContext = this._oSelectedAppointmentContext;
-
-		const sID = oContext.getProperty("ID");
-		const sActionPath = `/AppointmentsSet(ID=${sID},IsActiveEntity=true)`;
-		const oAppointmentContext = oModel.bindContext(sActionPath) as any;
+		const oModel = oView.getModel() as any;
 		const oEditFlow = this.base.getExtensionAPI().getEditFlow();
-		const oData = await oAppointmentContext.requestObject("");
-		console.log(oData);
+		
+		//const sID = this._oSelectedAppointmentContext.getProperty("ID");
+		// const oCanonicalContext = oModel.bindContext(
+		// 	`/AppointmentsSet(ID=${sID},IsActiveEntity=true)`,
+		// 	undefined,
+		// 	{ $$updateGroupId: "$direct" } // Fuerza a que no espere al $batch
+		// ).getBoundContext();
+
+        const oActiveContext = this._oSelectedAppointmentContext;
 
 		try {
-			await oAppointmentContext.requestObject("");
-			if (oAppointmentContext) {
-
+			if (oActiveContext) {
 				await oEditFlow.invokeAction(`LogaliGroup.${sActionName}`, {
 					//await oEditFlow.invokeAction("LogaliGroup.cancelAppointment", {
-					contexts: oAppointmentContext,
+					contexts: oActiveContext,
 					skipParameterDialog: true,
-					parameterValues: []
+					parameterValues: [],
+
+
 				});
 
-				// Resetear selección y botones
-				(oView.byId("fe::CustomSubSection::PlanningCalendar--confirmBtn") as any).setEnabled(false);
-				(oView.byId("fe::CustomSubSection::PlanningCalendar--cancelBtn") as any).setEnabled(false);
-
-				//Refrescar Calendario
-				const oBindingContext = oView.getBindingContext() as any;
-
-				if (oBindingContext && oBindingContext.getBinding()) {
-					oBindingContext.getBinding().refresh();
-				} else {
-					oModel.refresh();
-				}
-
-				if (sActionName === "confirmAppointment") {
-					MessageToast.show("Appointment confirmed");
-				} else {
-					MessageToast.show("Appointment canceled");
-				}
-
+				MessageToast.show(
+					sActionName === "confirmAppointment"
+						? "Appointment confirmed"
+						: "Appointment canceled"
+				);
+				this._refreshUI(oView);
 			}
 		} catch (oError: any) {
 			console.error("Action error:", oError);
 		}
 
+	}
+
+	private _refreshUI(oView: any): void {
+		oView.byId("fe::CustomSubSection::PlanningCalendar--confirmBtn")?.setEnabled(false);
+		oView.byId("fe::CustomSubSection::PlanningCalendar--cancelBtn")?.setEnabled(false);
+		oView.getBindingContext()?.getBinding()?.refresh();
 	}
 
 }
