@@ -6,7 +6,7 @@ El proyecto implementa una arquitectura de extensiones, integrando servicios ODa
 Instalación y Configuración
 Siga estos pasos para ejecutar el proyecto en su entorno local o en Business Application Studio:
 1. Clonar el repositorio
-  Get Started with SAP Business Application Studio -> Clone from Git/ provide repositoy URL: 
+  Get Started with SAP Business Application Studio -> Clone from Git/ provide repositoy URL: https://github.com/yalejos/ProyectoFinalFioriElements.git
 2. Instalar dependencias
    Open New terminal-> Execute: npm install
 3. Configuración del Destino (BTP)
