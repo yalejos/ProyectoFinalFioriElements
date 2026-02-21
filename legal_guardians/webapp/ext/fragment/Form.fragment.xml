@@ -38,7 +38,7 @@
                                 value="{formModel>/beginDate}" 
                                 change="onChangeDatePress"/>
 
-                    <Label id="_IDGenLabel9" text="{i18n>beginDate}" required="true" />
+                    <Label id="_IDGenLabel9" text="{i18n>endDate}" required="true" />
                      <DatePicker id="endDate" 
                                  valueFormat="yyyy-MM-dd"
                                  value="{formModel>/endDate}" 

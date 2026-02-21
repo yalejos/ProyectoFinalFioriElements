@@ -1,22 +1,26 @@
-import ControllerExtension from 'sap/ui/core/mvc/ControllerExtension';
-import ExtensionAPI from 'sap/fe/templates/ObjectPage/ExtensionAPI';
-import JSONModel from 'sap/ui/model/json/JSONModel';
-import MessageToast from "sap/m/MessageToast";
-import Fragment from "sap/ui/core/Fragment";
-import View from 'sap/ui/core/mvc/View';
-import Dialog from 'sap/m/Dialog';
-import SelectDialog, { SelectDialog$ConfirmEvent, SelectDialog$SearchEvent } from "sap/m/SelectDialog";
 import Input from 'sap/m/Input';
-import StandardListItem from "sap/m/StandardListItem";
+import Button from 'sap/m/Button';
+import Dialog from 'sap/m/Dialog';
+import View from 'sap/ui/core/mvc/View';
 import Filter from 'sap/ui/model/Filter';
-import FilterOperator from 'sap/ui/model/FilterOperator';
-import { DateRangePicker$ChangeEvent } from 'sap/ui/webc/main/DateRangePicker';
-import SinglePlanningCalendar, { SinglePlanningCalendar$AppointmentDropEvent, SinglePlanningCalendar$AppointmentSelectEvent } from "sap/m/SinglePlanningCalendar";
+import Fragment from "sap/ui/core/Fragment";
+import MessageToast from "sap/m/MessageToast";
+import BaseContext from "sap/ui/model/Context";
 import Guid from 'sap/ui/model/odata/type/Guid';
-import ODataMetaModel from 'sap/ui/model/odata/v4/ODataMetaModel';
 import Context from 'sap/ui/model/odata/v4/Context';
+import JSONModel from 'sap/ui/model/json/JSONModel';
+import StandardListItem from "sap/m/StandardListItem";
+import FilterOperator from 'sap/ui/model/FilterOperator';
+import ODataModel from 'sap/ui/model/odata/v4/ODataModel';
+import ResourceBundle from 'sap/base/i18n/ResourceBundle';
+import ODataMetaModel from 'sap/ui/model/odata/v4/ODataMetaModel';
+import ExtensionAPI from 'sap/fe/templates/ObjectPage/ExtensionAPI';
 import CalendarAppointment from 'sap/ui/unified/CalendarAppointment';
-
+import ControllerExtension from 'sap/ui/core/mvc/ControllerExtension';
+import ODataContextBinding from 'sap/ui/model/odata/v4/ODataContextBinding';
+import { DateRangePicker$ChangeEvent } from 'sap/ui/webc/main/DateRangePicker';
+import SelectDialog, { SelectDialog$ConfirmEvent, SelectDialog$SearchEvent } from "sap/m/SelectDialog";
+import SinglePlanningCalendar, { SinglePlanningCalendar$AppointmentDropEvent, SinglePlanningCalendar$AppointmentSelectEvent } from "sap/m/SinglePlanningCalendar";
 
 /**
  * @namespace com.ya.legalguardians.ext.controller
@@ -27,7 +31,9 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 	_pDialog: Dialog;
 	private _pValueHelpDialog: Promise<SelectDialog>;
 	private _sInputId: string;
-	private _oSelectedAppointmentContext: any = null;
+	private _oSelectedAppointmentContext: Context | BaseContext | null | undefined = null;
+
+
 
 	static overrides = {
 		/**
@@ -41,23 +47,62 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 			this.formModel();
 
 			const OExtensionAPI = this.base as any;
-			const oView = OExtensionAPI.getView() as View;
-			oView.bindElement({
-				path: "",
-				events: {
-					change: () => this._loadChartData()
-				}
+
+			const oModel = OExtensionAPI.getModel() as ODataModel;
+
+			const oInitialCtx = OExtensionAPI.getBindingContext() as Context;
+			if (!oInitialCtx) {
+				console.warn("No hay binding context inicial en la Object Page");
+				return;
+			}
+			const oMetaModel = oModel.getMetaModel();
+			const sEntitySet = oInitialCtx.getPath().split("(")[0]; // Ej: "/Patients"
+			const oEntityType = oMetaModel.getObject(`${sEntitySet}/`);
+
+			const bHasToAppointments =
+				oEntityType?.navigationProperty?.some(
+					(nav: { name: string }) => nav.name === "toAppointments"
+				);
+			if (!bHasToAppointments) {
+				console.warn("La entidad no tiene navegación toAppointments. No se cargará el gráfico.");
+				return;
+			}
+
+			// Evento correcto para cargar datos cuando la página está lista
+			OExtensionAPI.attachPageDataLoaded((oEvent: { context: Context }) => {
+				this._loadChartData(oEvent.context);
 			});
+
+
 		}
 	}
 
-	private async _loadChartData(): Promise<void> {
+	private async _loadChartData(oContext: Context): Promise<void> {
+		if (!oContext) return;
+
 		const OExtensionAPI = this.base as any;
 		const oView = OExtensionAPI.getView();
-		const oContext = oView.getBindingContext() as any;
+
+		const oModel = oContext.getModel() as ODataModel;
+		const oMetaModel = oModel.getMetaModel() as ODataMetaModel;
+
+		// 1️⃣ Validar navegación toAppointments
+		const sEntitySet = oContext.getPath().split("(")[0]; 
+		const oEntityType = oMetaModel.getObject(`${sEntitySet}/`);
+
+		const bHasToAppointments =
+			oEntityType?.navigationProperty?.some(
+				(nav: { name: string }) => nav.name === "toAppointments"
+			);
+
+		if (!bHasToAppointments) {
+			console.warn("La entidad no tiene navegación toAppointments.");
+			return;
+		}
+
 		const sCanonical = await oContext.requestCanonicalPath();
 		const sActivePath = sCanonical.replace("IsActiveEntity=false", "IsActiveEntity=true");
-		const oActiveContext = oView.getModel().bindContext(sActivePath).getBoundContext();
+		const oActiveContext = oView.getModel().bindContext(sActivePath).getBoundContext() as Context;
 
 		if (!oContext) {
 			return;
@@ -102,7 +147,7 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 	private _configureVizColors(aChartData: any[]): void {
 		const oView = (this.base as any).getView();
 		const oVizFrame = oView.byId("fe::CustomSubSection::VizFrame--appointmentVizFrame");
-		const oResourceBundle = oView.getModel("i18n").getResourceBundle() as any;
+		const oResourceBundle = oView.getModel("i18n").getResourceBundle() as ResourceBundle;
 		const sTitle = oResourceBundle.getText("charttitle") as string;
 
 		if (oVizFrame) {
@@ -169,7 +214,7 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 		const oView = OExtensionAPI.getView() as View;
 		const oFormModel = oView.getModel("formModel") as JSONModel;
 		const body = oFormModel.getData();
-		const oContext = oView.getBindingContext() as any;
+		const oContext = oView.getBindingContext() as Context;
 		const sTherapistID = body.therapist_ID as Guid;
 		const sAppointmentType = body.typeAppointment_ID as Guid;
 		const sBlockID = body.block_ID as Guid;
@@ -203,7 +248,7 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 					this.formModel();
 					this.onCloseDialog();
 				}
-			} catch (oError: any) {
+			} catch (oError) {
 				console.error("Error al navegar a toPatients:", oError);
 			}
 		}
@@ -236,8 +281,7 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 
 		if (this._sInputId.includes("inputTherapist")) {
 			sEntityPath = "/TherapistsSet";
-			//@ts-ignore
-			sTitle = this.base.getModel("i18n").getResourceBundle().getText("selectTherapist");;
+			sTitle = (this.base as any).getModel("i18n").getResourceBundle().getText("selectTherapist");;
 			sCurrentID = oFormModel.getProperty("/therapist_ID");
 
 			oDialog.bindAggregation("items", {
@@ -259,8 +303,7 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 
 		} else if (this._sInputId.includes("inputType")) {
 			sEntityPath = "/VH_TypesAppointments";
-			//@ts-ignore
-			sTitle = this.base.getModel("i18n").getResourceBundle().getText("selectTypeAppointment");
+			sTitle = (this.base as any).getModel("i18n").getResourceBundle().getText("selectTypeAppointment");
 			sCurrentID = oFormModel.getProperty("/typeAppointment_ID");
 
 			oDialog.bindAggregation("items", {
@@ -406,13 +449,13 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 
 		if (oAppointment) {
 			this._oSelectedAppointmentContext = oAppointment.getBindingContext();
-			(oView.byId("fe::CustomSubSection::PlanningCalendar--confirmBtn") as any).setEnabled(true);
-			(oView.byId("fe::CustomSubSection::PlanningCalendar--cancelBtn") as any).setEnabled(true);
+			(oView.byId("fe::CustomSubSection::PlanningCalendar--confirmBtn") as Button).setEnabled(true);
+			(oView.byId("fe::CustomSubSection::PlanningCalendar--cancelBtn") as Button).setEnabled(true);
 		} else {
 
 			this._oSelectedAppointmentContext = null;
-			(oView.byId("fe::CustomSubSection::PlanningCalendar--confirmBtn") as any).setEnabled(false);
-			(oView.byId("fe::CustomSubSection::PlanningCalendar--cancelBtn") as any).setEnabled(false);
+			(oView.byId("fe::CustomSubSection::PlanningCalendar--confirmBtn") as Button).setEnabled(false);
+			(oView.byId("fe::CustomSubSection::PlanningCalendar--cancelBtn") as Button).setEnabled(false);
 		}
 
 	}
@@ -429,19 +472,20 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 
 		const OExtensionAPI = this.base as any;
 		const oView = OExtensionAPI.getView() as View;
-		const oModel = oView.getModel() as ODataMetaModel;
+		const oModel = oView.getModel() as ODataModel;
 
 		const sID = oContext.getProperty("ID");
 		const sActionPath = `/AppointmentsSet(ID=${sID},IsActiveEntity=true)`;
-		const oAppointmentContext = oModel.bindContext(sActionPath) as any;
+		const oAppointmentContext = oModel.bindContext(sActionPath) as ODataContextBinding;
 		const oEditFlow = this.base.getExtensionAPI().getEditFlow();
 
 		try {
 			await oAppointmentContext.requestObject("");
+			const oContext = oAppointmentContext.getBoundContext() as Context;
 			if (oAppointmentContext) {
 
 				await oEditFlow.invokeAction("LogaliGroup.reschedule", {
-					contexts: oAppointmentContext,
+					contexts: oContext,
 					skipParameterDialog: true,
 					parameterValues: [
 						{ name: "startDate", value: sStart },
@@ -451,13 +495,21 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 				});
 
 				//Refrescar Calendario
-				const oBindingContext = oView.getBindingContext() as any;
+				const oBindingContext = oView.getBindingContext() as Context;
 
-				if (oBindingContext && oBindingContext.getBinding()) {
-					oBindingContext.getBinding().refresh();
+				if (oBindingContext) {
+					try {
+						await oBindingContext.requestSideEffects([
+							{ $NavigationPropertyPath: 'toAppointments' }
+						])
+					} catch {
+						oModel.refresh();
+					}
 				} else {
 					oModel.refresh();
 				}
+
+				this._refreshUI(oView);
 				MessageToast.show("Appointment rescheduled");
 			}
 		} catch (oError: any) {
@@ -478,28 +530,39 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 
 		const OExtensionAPI = this.base as any;
 		const oView = OExtensionAPI.getView() as View;
-		const oModel = oView.getModel() as any;
+		const oModel = oView.getModel() as ODataModel
+		const oContext = this._oSelectedAppointmentContext;
 		const oEditFlow = this.base.getExtensionAPI().getEditFlow();
-		
-		//const sID = this._oSelectedAppointmentContext.getProperty("ID");
-		// const oCanonicalContext = oModel.bindContext(
-		// 	`/AppointmentsSet(ID=${sID},IsActiveEntity=true)`,
-		// 	undefined,
-		// 	{ $$updateGroupId: "$direct" } // Fuerza a que no espere al $batch
-		// ).getBoundContext();
-
-        const oActiveContext = this._oSelectedAppointmentContext;
+		const sID = oContext.getProperty("ID");
+		const sActionPath = `/AppointmentsSet(ID=${sID},IsActiveEntity=true)`;
+		const oAppointmentContext = oModel.bindContext(sActionPath) as ODataContextBinding;
 
 		try {
-			if (oActiveContext) {
+			await oAppointmentContext.requestObject("");
+			const oActionContext = oAppointmentContext.getBoundContext() as Context;
+			if (oActionContext) {
 				await oEditFlow.invokeAction(`LogaliGroup.${sActionName}`, {
-					//await oEditFlow.invokeAction("LogaliGroup.cancelAppointment", {
-					contexts: oActiveContext,
+					contexts: oActionContext,
 					skipParameterDialog: true,
 					parameterValues: [],
-
-
 				});
+
+				this._oSelectedAppointmentContext = null;
+
+				//Refrescar Calendario
+				const oBindingContext = oView.getBindingContext() as Context;
+
+				if (oBindingContext) {
+					try {
+						await oBindingContext.requestSideEffects([
+							{ $NavigationPropertyPath: 'toAppointments' }
+						])
+					} catch {
+						oModel.refresh();
+					}
+				} else {
+					oModel.refresh();
+				}
 
 				MessageToast.show(
 					sActionName === "confirmAppointment"
@@ -514,10 +577,9 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 
 	}
 
-	private _refreshUI(oView: any): void {
-		oView.byId("fe::CustomSubSection::PlanningCalendar--confirmBtn")?.setEnabled(false);
-		oView.byId("fe::CustomSubSection::PlanningCalendar--cancelBtn")?.setEnabled(false);
-		oView.getBindingContext()?.getBinding()?.refresh();
+	private _refreshUI(oView: View): void {
+		(oView.byId("fe::CustomSubSection::PlanningCalendar--confirmBtn") as Button).setEnabled(false);
+		(oView.byId("fe::CustomSubSection::PlanningCalendar--cancelBtn") as Button).setEnabled(false);
 	}
 
 }
