@@ -9,6 +9,7 @@ import BaseContext from "sap/ui/model/Context";
 import Guid from 'sap/ui/model/odata/type/Guid';
 import Context from 'sap/ui/model/odata/v4/Context';
 import JSONModel from 'sap/ui/model/json/JSONModel';
+import VizFrame from 'sap/viz/ui5/controls/VizFrame';
 import StandardListItem from "sap/m/StandardListItem";
 import FilterOperator from 'sap/ui/model/FilterOperator';
 import ODataModel from 'sap/ui/model/odata/v4/ODataModel';
@@ -22,6 +23,7 @@ import { DateRangePicker$ChangeEvent } from 'sap/ui/webc/main/DateRangePicker';
 import SelectDialog, { SelectDialog$ConfirmEvent, SelectDialog$SearchEvent } from "sap/m/SelectDialog";
 import SinglePlanningCalendar, { SinglePlanningCalendar$AppointmentDropEvent, SinglePlanningCalendar$AppointmentSelectEvent } from "sap/m/SinglePlanningCalendar";
 
+
 /**
  * @namespace com.ya.legalguardians.ext.controller
  * @controller
@@ -32,8 +34,6 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 	private _pValueHelpDialog: Promise<SelectDialog>;
 	private _sInputId: string;
 	private _oSelectedAppointmentContext: Context | BaseContext | null | undefined = null;
-
-
 
 	static overrides = {
 		/**
@@ -51,38 +51,38 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 			const oModel = OExtensionAPI.getModel() as ODataModel;
 
 			const oInitialCtx = OExtensionAPI.getBindingContext() as Context;
+
 			if (!oInitialCtx) {
 				console.warn("No hay binding context inicial en la Object Page");
 				return;
 			}
+
 			const oMetaModel = oModel.getMetaModel();
-			const sEntitySet = oInitialCtx.getPath().split("(")[0]; // Ej: "/Patients"
+			const sEntitySet = oInitialCtx.getPath().split("(")[0];
 			const oEntityType = oMetaModel.getObject(`${sEntitySet}/`);
 
 			const bHasToAppointments =
 				oEntityType?.navigationProperty?.some(
 					(nav: { name: string }) => nav.name === "toAppointments"
 				);
+
 			if (!bHasToAppointments) {
 				console.warn("La entidad no tiene navegación toAppointments. No se cargará el gráfico.");
 				return;
 			}
 
-			// Evento correcto para cargar datos cuando la página está lista
 			OExtensionAPI.attachPageDataLoaded((oEvent: { context: Context }) => {
 				this._loadChartData(oEvent.context);
 			});
-
-
 		}
 	}
 
 	private async _loadChartData(oContext: Context): Promise<void> {
+
 		if (!oContext) return;
 
 		const OExtensionAPI = this.base as any;
 		const oView = OExtensionAPI.getView();
-
 		const oModel = oContext.getModel() as ODataModel;
 		const oMetaModel = oModel.getMetaModel() as ODataMetaModel;
 
@@ -104,9 +104,6 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 		const sActivePath = sCanonical.replace("IsActiveEntity=false", "IsActiveEntity=true");
 		const oActiveContext = oView.getModel().bindContext(sActivePath).getBoundContext() as Context;
 
-		if (!oContext) {
-			return;
-		}
 		try {
 
 			const oListBinding = oView.getModel().bindList("toAppointments", oActiveContext, undefined, undefined, {
@@ -138,15 +135,15 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 
 				this._configureVizColors(aChartData);
 			}
-		} catch (oError: any) {
+		} catch (oError) {
 			console.error("Error: La relación toAppointments no existe en la entidad Patients", oError);
 		}
 
 	}
 
 	private _configureVizColors(aChartData: any[]): void {
-		const oView = (this.base as any).getView();
-		const oVizFrame = oView.byId("fe::CustomSubSection::VizFrame--appointmentVizFrame");
+		const oView = (this.base as any).getView() ;
+		const oVizFrame = oView.byId("fe::CustomSubSection::VizFrame--appointmentVizFrame") as VizFrame;
 		const oResourceBundle = oView.getModel("i18n").getResourceBundle() as ResourceBundle;
 		const sTitle = oResourceBundle.getText("charttitle") as string;
 
@@ -445,7 +442,7 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 	public onAppointmentSelect(oEvent: SinglePlanningCalendar$AppointmentSelectEvent): void {
 		const OExtensionAPI = this.base as any;
 		const oView = OExtensionAPI.getView() as View;
-		const oAppointment = oEvent.getParameter("appointment");
+		const oAppointment = oEvent.getParameter("appointment") as CalendarAppointment ;
 
 		if (oAppointment) {
 			this._oSelectedAppointmentContext = oAppointment.getBindingContext();
@@ -477,7 +474,7 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 		const sID = oContext.getProperty("ID");
 		const sActionPath = `/AppointmentsSet(ID=${sID},IsActiveEntity=true)`;
 		const oAppointmentContext = oModel.bindContext(sActionPath) as ODataContextBinding;
-		const oEditFlow = this.base.getExtensionAPI().getEditFlow();
+		const oEditFlow = OExtensionAPI.getExtensionAPI().getEditFlow();
 
 		try {
 			await oAppointmentContext.requestObject("");
@@ -512,7 +509,7 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 				this._refreshUI(oView);
 				MessageToast.show("Appointment rescheduled");
 			}
-		} catch (oError: any) {
+		} catch (oError) {
 			console.error("Error al navegar a toAppointment:", oError);
 		}
 
@@ -532,7 +529,7 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 		const oView = OExtensionAPI.getView() as View;
 		const oModel = oView.getModel() as ODataModel
 		const oContext = this._oSelectedAppointmentContext;
-		const oEditFlow = this.base.getExtensionAPI().getEditFlow();
+		const oEditFlow = OExtensionAPI.getExtensionAPI().getEditFlow();
 		const sID = oContext.getProperty("ID");
 		const sActionPath = `/AppointmentsSet(ID=${sID},IsActiveEntity=true)`;
 		const oAppointmentContext = oModel.bindContext(sActionPath) as ODataContextBinding;
@@ -571,7 +568,7 @@ export default class ObjectPage extends ControllerExtension<ExtensionAPI> {
 				);
 				this._refreshUI(oView);
 			}
-		} catch (oError: any) {
+		} catch (oError) {
 			console.error("Action error:", oError);
 		}
 
