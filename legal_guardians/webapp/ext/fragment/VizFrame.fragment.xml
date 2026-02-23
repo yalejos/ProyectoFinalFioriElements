@@ -8,20 +8,21 @@
 		              uiConfig="{ applicationSet:'fiori'}" 
 					  vizType="bar" 
 					  width="100%" 
-					  height="400px">
+					  height="500px">
             <viz:dataset>
                 <viz.data:FlattenedDataset id="_IDGenFlattenedDataset1" data="{chartModel>/chartData}">
                     <viz.data:dimensions>
-                        <viz.data:DimensionDefinition id="_IDGenDimensionDefinition" name="{i18n>status}" value="{chartModel>status}" />
+                        <viz.data:DimensionDefinition id="_IDGenDimensionDefinition" name="Status" value="{chartModel>Status}" />
                     </viz.data:dimensions>
                     <viz.data:measures>
-                        <viz.data:MeasureDefinition id="_IDGenMeasureDefinition" name="{i18n>total}" value="{chartModel>count}" />
+                        <viz.data:MeasureDefinition id="_IDGenMeasureDefinition" name="Total" value="{chartModel>count}" />
                     </viz.data:measures>
                 </viz.data:FlattenedDataset>
             </viz:dataset>
             <viz:feeds>
                 <viz.feeds:FeedItem id="_IDGenFeedItem" uid="valueAxis" type="Measure" values="Total" />
                 <viz.feeds:FeedItem id="_IDGenFeedItem1" uid="categoryAxis" type="Dimension" values="Status" />
+                <viz.feeds:FeedItem id="_IDGenFeedItem2" uid="color" type="Dimension" values="Status" />
             </viz:feeds>
         </viz:VizFrame>
     </VBox>

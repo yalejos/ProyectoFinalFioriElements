@@ -9,7 +9,11 @@
     "undeploy": "cf undeploy legal_guardians-ui --delete-services --delete-service-keys --delete-service-brokers"
   },
   "devDependencies": {
-    "mbt": "^1.2.29",
+    "@ui5/cli": "^4.0.0",
+    "mbt": "^1.2.24",
     "rimraf": "^6.0.1"
+  },
+  "dependencies": {
+    "@sapui5/ts-types-esm": "^1.145.0"
   }
 }

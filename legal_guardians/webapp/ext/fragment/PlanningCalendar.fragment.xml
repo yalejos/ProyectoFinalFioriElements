@@ -36,6 +36,12 @@
 						visible="{=${IsActiveEntity} === true? false : true }"
             			enabled="false"
             			press=".extension.com.ya.legalguardians.ext.controller.ObjectPage.onCancelAppointment"/>
+			    <Button id="confimAttBtn"
+            			text="{i18n>confirmaAttendance}"
+            			type="Reject"
+						visible="{=${IsActiveEntity} === true? false : true }"
+            			enabled="false"
+            			press=".extension.com.ya.legalguardians.ext.controller.ObjectPage.onConfirmAttendance"/>
 			</actions>
 			
 			<appointments>
@@ -45,7 +51,10 @@
 											 description="{description}"
 				                             startDate="{startDate}" 
 											 endDate="{endDate2}"
-											 type="Type01" />
+											   type="{= ${status_code} === 'Confirmed' ? 'Type08' 
+                                                      : ${status_code} === 'OnHold'    ? 'Type01' 
+                                                      : ${status_code} === 'Pending'   ? 'Type06' : 'Type02' }"
+ />
 			</appointments>
 		
 		</SinglePlanningCalendar>
